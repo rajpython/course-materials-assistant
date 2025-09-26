@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, themeToggle;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,8 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
     newChatButton = document.getElementById('newChatButton');
+    themeToggle = document.getElementById('themeToggle');
     
     setupEventListeners();
+    initializeTheme();
     createNewSession();
     loadCourseStats();
 });
@@ -32,6 +34,15 @@ function setupEventListeners() {
 
     // New chat button
     newChatButton.addEventListener('click', startNewChat);
+
+    // Theme toggle button
+    themeToggle.addEventListener('click', toggleTheme);
+    themeToggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleTheme();
+        }
+    });
 
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
@@ -179,6 +190,51 @@ function startNewChat() {
     if (chatInput) {
         chatInput.focus();
     }
+}
+
+// Theme Functions
+function initializeTheme() {
+    // Check if user has a saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // Set initial theme: saved preference > system preference > default dark
+    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+    // Apply the theme
+    document.documentElement.setAttribute('data-theme', initialTheme);
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        // Only apply system preference if user hasn't manually set a theme
+        if (!localStorage.getItem('theme')) {
+            const newTheme = e.matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+        }
+    });
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    // Apply new theme
+    document.documentElement.setAttribute('data-theme', newTheme);
+
+    // Save user's preference
+    localStorage.setItem('theme', newTheme);
+
+    // Add a subtle animation effect to the button
+    if (themeToggle) {
+        themeToggle.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            themeToggle.style.transform = '';
+        }, 150);
+    }
+}
+
+function getCurrentTheme() {
+    return document.documentElement.getAttribute('data-theme') || 'dark';
 }
 
 // Load course statistics
