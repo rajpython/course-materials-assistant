@@ -94,3 +94,4 @@ Frontend → FastAPI → RAG System → AI Generator (Claude API)
 - Frontend serves from root `/`, API at `/api/*`
 - Invalid API keys cause 500 errors - restart server after fixing `.env`
 - always use pip to manger the server do not use pip directly
+- don't run the server using ./run.sh I will do it myself
