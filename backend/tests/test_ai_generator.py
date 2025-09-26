@@ -1,7 +1,8 @@
-import pytest
-import sys
 import os
-from unittest.mock import Mock, MagicMock, patch
+import sys
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,7 +19,7 @@ class TestAIGenerator:
         self.model = "claude-sonnet-4-20250514"
 
         # Mock anthropic client
-        with patch('ai_generator.anthropic.Anthropic') as mock_anthropic:
+        with patch("ai_generator.anthropic.Anthropic") as mock_anthropic:
             self.mock_client = Mock()
             mock_anthropic.return_value = self.mock_client
             self.ai_generator = AIGenerator(self.api_key, self.model)
@@ -60,10 +61,14 @@ class TestAIGenerator:
         self.mock_client.messages.create.return_value = mock_response
 
         history = "Previous conversation context"
-        result = self.ai_generator.generate_response("Test query", conversation_history=history)
+        result = self.ai_generator.generate_response(
+            "Test query", conversation_history=history
+        )
 
         call_args = self.mock_client.messages.create.call_args[1]
-        expected_system = f"{self.ai_generator.SYSTEM_PROMPT}\n\nPrevious conversation:\n{history}"
+        expected_system = (
+            f"{self.ai_generator.SYSTEM_PROMPT}\n\nPrevious conversation:\n{history}"
+        )
         assert call_args["system"] == expected_system
 
     def test_generate_response_with_tools_no_tool_use(self):
@@ -77,9 +82,7 @@ class TestAIGenerator:
         mock_tool_manager = Mock()
 
         result = self.ai_generator.generate_response(
-            "Test query",
-            tools=tools,
-            tool_manager=mock_tool_manager
+            "Test query", tools=tools, tool_manager=mock_tool_manager
         )
 
         call_args = self.mock_client.messages.create.call_args[1]
@@ -104,7 +107,10 @@ class TestAIGenerator:
         mock_final_response = Mock()
         mock_final_response.content = [Mock(text="Final response with tool results")]
 
-        self.mock_client.messages.create.side_effect = [mock_initial_response, mock_final_response]
+        self.mock_client.messages.create.side_effect = [
+            mock_initial_response,
+            mock_final_response,
+        ]
 
         # Mock tool manager
         mock_tool_manager = Mock()
@@ -113,15 +119,12 @@ class TestAIGenerator:
         tools = [{"name": "search_course_content", "description": "Search tool"}]
 
         result = self.ai_generator.generate_response(
-            "Test query",
-            tools=tools,
-            tool_manager=mock_tool_manager
+            "Test query", tools=tools, tool_manager=mock_tool_manager
         )
 
         # Verify tool was executed
         mock_tool_manager.execute_tool.assert_called_once_with(
-            "search_course_content",
-            query="test search"
+            "search_course_content", query="test search"
         )
 
         # Verify two API calls were made
@@ -153,17 +156,17 @@ class TestAIGenerator:
 
         base_params = {
             "messages": [{"role": "user", "content": "Test query"}],
-            "system": self.ai_generator.SYSTEM_PROMPT
+            "system": self.ai_generator.SYSTEM_PROMPT,
         }
 
         result = self.ai_generator._handle_tool_execution(
-            mock_initial_response,
-            base_params,
-            mock_tool_manager
+            mock_initial_response, base_params, mock_tool_manager
         )
 
         # Verify tool execution
-        mock_tool_manager.execute_tool.assert_called_once_with("test_tool", param="value")
+        mock_tool_manager.execute_tool.assert_called_once_with(
+            "test_tool", param="value"
+        )
 
         # Verify final API call structure
         final_call_args = self.mock_client.messages.create.call_args[1]
@@ -209,13 +212,11 @@ class TestAIGenerator:
 
         base_params = {
             "messages": [{"role": "user", "content": "Test query"}],
-            "system": self.ai_generator.SYSTEM_PROMPT
+            "system": self.ai_generator.SYSTEM_PROMPT,
         }
 
         result = self.ai_generator._handle_tool_execution(
-            mock_initial_response,
-            base_params,
-            mock_tool_manager
+            mock_initial_response, base_params, mock_tool_manager
         )
 
         # Verify both tools were executed
@@ -260,7 +261,10 @@ class TestAIGenerator:
 
         mock_final_response = Mock()
         mock_final_response.content = [Mock(text="Error handled")]
-        self.mock_client.messages.create.side_effect = [mock_initial_response, mock_final_response]
+        self.mock_client.messages.create.side_effect = [
+            mock_initial_response,
+            mock_final_response,
+        ]
 
         mock_tool_manager = Mock()
         mock_tool_manager.execute_tool.side_effect = Exception("Tool execution failed")
@@ -269,9 +273,7 @@ class TestAIGenerator:
 
         # Should not raise exception, should handle gracefully
         result = self.ai_generator.generate_response(
-            "Test query",
-            tools=tools,
-            tool_manager=mock_tool_manager
+            "Test query", tools=tools, tool_manager=mock_tool_manager
         )
 
         # Tool should have been attempted
@@ -295,7 +297,9 @@ class TestAIGenerator:
 
         # Round 1 follow-up response (indicates need for more info)
         follow_up_1 = Mock()
-        follow_up_1.content = [Mock(text="I need to search for more details about lesson 4")]
+        follow_up_1.content = [
+            Mock(text="I need to search for more details about lesson 4")
+        ]
 
         # Round 2: Second tool use
         tool_use_2 = Mock()
@@ -310,18 +314,23 @@ class TestAIGenerator:
 
         # Final response
         final_response = Mock()
-        final_response.content = [Mock(text="Based on the information gathered, here is the complete answer")]
+        final_response.content = [
+            Mock(text="Based on the information gathered, here is the complete answer")
+        ]
 
         # Setup API responses
         self.mock_client.messages.create.side_effect = [
-            response_1, follow_up_1, response_2, final_response
+            response_1,
+            follow_up_1,
+            response_2,
+            final_response,
         ]
 
         # Mock tool manager
         mock_tool_manager = Mock()
         mock_tool_manager.execute_tool.side_effect = [
             "Course outline results",
-            "Specific lesson content"
+            "Specific lesson content",
         ]
 
         tools = [{"name": "get_course_outline"}, {"name": "search_course_content"}]
@@ -330,16 +339,22 @@ class TestAIGenerator:
             "What does lesson 4 of MCP course cover?",
             tools=tools,
             tool_manager=mock_tool_manager,
-            max_rounds=2
+            max_rounds=2,
         )
 
         # Verify two tools were executed
         assert mock_tool_manager.execute_tool.call_count == 2
-        mock_tool_manager.execute_tool.assert_any_call("get_course_outline", course_name="MCP")
-        mock_tool_manager.execute_tool.assert_any_call("search_course_content", query="lesson 4 content", course_name="MCP")
+        mock_tool_manager.execute_tool.assert_any_call(
+            "get_course_outline", course_name="MCP"
+        )
+        mock_tool_manager.execute_tool.assert_any_call(
+            "search_course_content", query="lesson 4 content", course_name="MCP"
+        )
 
         # Verify final response
-        assert result == "Based on the information gathered, here is the complete answer"
+        assert (
+            result == "Based on the information gathered, here is the complete answer"
+        )
 
         # Verify 4 API calls were made (2 rounds × 2 calls each)
         assert self.mock_client.messages.create.call_count == 4
@@ -359,7 +374,11 @@ class TestAIGenerator:
 
         # Round 1 follow-up response (indicates completion)
         follow_up_1 = Mock()
-        follow_up_1.content = [Mock(text="Based on the information gathered, chatbots are covered in the MCP course")]
+        follow_up_1.content = [
+            Mock(
+                text="Based on the information gathered, chatbots are covered in the MCP course"
+            )
+        ]
 
         # Setup API responses
         self.mock_client.messages.create.side_effect = [response_1, follow_up_1]
@@ -374,14 +393,17 @@ class TestAIGenerator:
             "Which courses cover chatbots?",
             tools=tools,
             tool_manager=mock_tool_manager,
-            max_rounds=2
+            max_rounds=2,
         )
 
         # Verify only one tool was executed
         assert mock_tool_manager.execute_tool.call_count == 1
 
         # Verify early termination due to completion signal
-        assert result == "Based on the information gathered, chatbots are covered in the MCP course"
+        assert (
+            result
+            == "Based on the information gathered, chatbots are covered in the MCP course"
+        )
 
         # Verify only 2 API calls were made (single round)
         assert self.mock_client.messages.create.call_count == 2
@@ -390,7 +412,9 @@ class TestAIGenerator:
         """Test when Claude doesn't use tools in first round"""
         # Direct response without tools
         direct_response = Mock()
-        direct_response.content = [Mock(text="This is a general knowledge question I can answer directly")]
+        direct_response.content = [
+            Mock(text="This is a general knowledge question I can answer directly")
+        ]
         direct_response.stop_reason = "end_turn"
 
         self.mock_client.messages.create.return_value = direct_response
@@ -402,7 +426,7 @@ class TestAIGenerator:
             "What is artificial intelligence?",
             tools=tools,
             tool_manager=mock_tool_manager,
-            max_rounds=2
+            max_rounds=2,
         )
 
         # Verify no tools were executed
@@ -431,8 +455,10 @@ class TestAIGenerator:
 
         # Setup to return same pattern repeatedly
         self.mock_client.messages.create.side_effect = [
-            tool_response, follow_up,  # Round 1
-            tool_response, follow_up   # Round 2
+            tool_response,
+            follow_up,  # Round 1
+            tool_response,
+            follow_up,  # Round 2
         ]
 
         mock_tool_manager = Mock()
@@ -441,10 +467,7 @@ class TestAIGenerator:
         tools = [{"name": "search_course_content"}]
 
         result = self.ai_generator.generate_response(
-            "Test query",
-            tools=tools,
-            tool_manager=mock_tool_manager,
-            max_rounds=2
+            "Test query", tools=tools, tool_manager=mock_tool_manager, max_rounds=2
         )
 
         # Should stop after 2 rounds
@@ -478,7 +501,7 @@ class TestAIGenerator:
             "Test query",
             tools=tools,
             tool_manager=mock_tool_manager,
-            max_rounds=1  # Custom limit
+            max_rounds=1,  # Custom limit
         )
 
         # Should stop after 1 round due to custom limit
@@ -493,10 +516,7 @@ class TestAIGenerator:
         tools = [{"name": "search_course_content"}]
 
         result = self.ai_generator.generate_response(
-            "Test query",
-            tools=tools,
-            tool_manager=mock_tool_manager,
-            max_rounds=2
+            "Test query", tools=tools, tool_manager=mock_tool_manager, max_rounds=2
         )
 
         assert "I encountered an error processing your request" in result
@@ -519,7 +539,9 @@ class TestAIGenerator:
 
         # Second round fails
         self.mock_client.messages.create.side_effect = [
-            response_1, follow_up_1, Exception("API Error in round 2")
+            response_1,
+            follow_up_1,
+            Exception("API Error in round 2"),
         ]
 
         mock_tool_manager = Mock()
@@ -528,10 +550,7 @@ class TestAIGenerator:
         tools = [{"name": "search_course_content"}]
 
         result = self.ai_generator.generate_response(
-            "Test query",
-            tools=tools,
-            tool_manager=mock_tool_manager,
-            max_rounds=2
+            "Test query", tools=tools, tool_manager=mock_tool_manager, max_rounds=2
         )
 
         # Should handle second round error gracefully
