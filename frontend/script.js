@@ -179,7 +179,7 @@ function escapeHtml(text) {
 async function createNewSession() {
     currentSessionId = null;
     chatMessages.innerHTML = '';
-    addMessage('Welcome to the Course Copilot! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+    addMessage('Welcome to the Course Co-Pilot! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
 }
 
 function startNewChat() {
