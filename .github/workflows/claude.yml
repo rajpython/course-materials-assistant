@@ -33,14 +33,15 @@ jobs:
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
-        with:
+        # with:
+        env:
           # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           
           # This is an optional setting that allows Claude to read CI results on PRs
-          additional_permissions: |
-            actions: read
-          # env:
+          # additional_permissions: |
+          #   actions: read
+          # # env:
           #   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
